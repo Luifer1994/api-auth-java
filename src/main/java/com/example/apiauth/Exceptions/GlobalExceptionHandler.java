@@ -12,36 +12,47 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.security.access.AccessDeniedException;
+
 import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 @Slf4j
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final MessageSource messageSource;
+
+    private String getMessage(String key, Object... args) {
+        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Object> handleResourceNotFound(ResourceNotFoundException ex) {
         log.warn("Resource not found: {}", ex.getMessage());
-        return HttpResponse.send(ex.getMessage(), HttpStatus.NOT_FOUND);
+        return HttpResponse.send(getMessage(ex.getMessage()), HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    @ExceptionHandler({ NoHandlerFoundException.class, NoResourceFoundException.class })
     public ResponseEntity<Object> handleNotFound(Exception ex) {
         log.warn("Route not found: {}", ex.getMessage());
-        return HttpResponse.send("The requested route does not exist.", HttpStatus.NOT_FOUND);
+        return HttpResponse.send(getMessage("error.route.not.found"), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Object> handleJsonError(HttpMessageNotReadableException ex) {
         log.error("Malformed JSON: {}", ex.getMessage());
-        return HttpResponse.send("JSON format error. Please check data types.", HttpStatus.BAD_REQUEST);
+        return HttpResponse.send(getMessage("error.json.malformed"), HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Object> handleDbConflict(DataIntegrityViolationException ex) {
-        // Use getMostSpecificCause() to see the actual SQL error details in logs
         log.warn("DB Conflict: {}", ex.getMostSpecificCause().getMessage());
-        return HttpResponse.send("Data conflict: " + ex.getMostSpecificCause().getMessage(), HttpStatus.CONFLICT);
+        return HttpResponse.send(getMessage("error.db.conflict"), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -50,12 +61,18 @@ public class GlobalExceptionHandler {
         ex.getBindingResult().getFieldErrors().forEach(error -> {
             errors.put(error.getField(), error.getDefaultMessage());
         });
-        return HttpResponse.send("Validation error", HttpStatus.BAD_REQUEST, errors);
+        return HttpResponse.send(getMessage("error.validation"), HttpStatus.UNPROCESSABLE_ENTITY, errors);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Object> handleAccessDenied(AccessDeniedException ex) {
+        log.warn("Access denied: {}", ex.getMessage());
+        return HttpResponse.send(getMessage("error.access.denied"), HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGeneralException(Exception ex) {
         log.error("Critical Error: {}", ex.getClass().getName(), ex);
-        return HttpResponse.send("Internal server error. Please contact the administrator.", HttpStatus.INTERNAL_SERVER_ERROR);
+        return HttpResponse.send(getMessage("error.internal"), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

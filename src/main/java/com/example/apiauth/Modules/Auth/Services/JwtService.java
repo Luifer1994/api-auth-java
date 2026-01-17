@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.List;
 import java.nio.charset.StandardCharsets;
 
 @Service
@@ -20,7 +19,6 @@ public class JwtService {
         return Jwts.builder()
                 .subject(credential.getUserId().toString())
                 .claim("email", credential.getEmail())
-                .claim("roles", List.of("ADMIN")) // Aquí podrías consultar roles de la DB
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 3600000)) // 1 hora
                 .signWith(KEY)

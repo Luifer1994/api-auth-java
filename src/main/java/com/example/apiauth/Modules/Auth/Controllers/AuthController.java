@@ -6,6 +6,8 @@ import com.example.apiauth.Modules.Auth.Services.LoginService;
 import com.example.apiauth.Modules.Auth.Services.RegisterService; // New
 import com.example.apiauth.Utils.HttpResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,11 @@ public class AuthController {
 
     private final LoginService loginService;
     private final RegisterService registerService;
+    private final MessageSource messageSource;
+
+    private String getMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
+    }
 
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody LoginRequestDTO request) {
@@ -28,12 +35,12 @@ public class AuthController {
         Map<String, String> response = new HashMap<>();
         response.put("token", token);
 
-        return HttpResponse.send("Login successful", HttpStatus.OK, response);
+        return HttpResponse.send(getMessage("auth.login.success"), HttpStatus.OK, response);
     }
 
     @PostMapping("/register-internal")
     public ResponseEntity<Object> registerInternal(@RequestBody RegisterRequestDTO request) {
         registerService.execute(request);
-        return HttpResponse.send("User registered successfully", HttpStatus.CREATED, null);
+        return HttpResponse.send(getMessage("auth.register.success"), HttpStatus.CREATED, null);
     }
 }

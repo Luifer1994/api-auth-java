@@ -17,10 +17,10 @@ public class LoginService {
 
     public String execute(LoginRequestDTO request) {
         var credential = credentialRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("Credentials invalid"));
+                .orElseThrow(() -> new ResourceNotFoundException("auth.credentials.invalid"));
 
         if (!passwordEncoder.matches(request.getPassword(), credential.getPasswordHash())) {
-            throw new RuntimeException("Invalid password");
+            throw new RuntimeException("auth.password.invalid");
         }
 
         return jwtService.createToken(credential);

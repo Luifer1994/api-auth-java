@@ -7,10 +7,10 @@ import lombok.Data;
 @Data
 public class LoginRequestDTO {
 
-    @NotBlank(message = "The name is mandatory")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "{auth.email.required}")
+    @Email(message = "{auth.email.invalid}")
     private String email;
 
-    @NotBlank(message = "The name is mandatory")
+    @NotBlank(message = "{auth.password.required}")
     private String password;
 }
