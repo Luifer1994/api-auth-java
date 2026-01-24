@@ -24,4 +24,23 @@ public class JwtService {
                 .signWith(KEY)
                 .compact();
     }
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser()
+                .verifyWith(KEY)
+                .build()
+                .parseSignedClaims(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public io.jsonwebtoken.Claims extractClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(KEY)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
 }
